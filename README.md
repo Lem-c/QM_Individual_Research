@@ -6,7 +6,7 @@ R-squared (0.723): This value indicates that approximately 72.3% of the variatio
 
 MSE (0.001): This low value suggests that the model has a small error term, indicating good model fit and prediction accuracy.
 
-![Linear regression](../img/linear regression.png)
+![Linear regression](https://github.com/Lem-c/QM_Individual_Research/blob/main/img/linear%20regression.png)
 
 
 ## Hypothesis Testing:
