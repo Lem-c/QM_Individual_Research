@@ -62,7 +62,7 @@ def simple_linear_regression(df_: pd.DataFrame, col_X: str, col_y: str,
     df_X = df_[[col_X]].to_numpy()
     df_y = df_[col_y].to_numpy()
 
-    X_train, X_test, y_train, y_test = train_test_split(df_X, df_y, test_size=0.3, train_size=0.7, random_state=2023)
+    X_train, X_test, y_train, y_test = train_test_split(df_X, df_y, test_size=0.1, train_size=0.9, random_state=2023)
 
     if isPolynomial:
         # Reshaping data for the model
@@ -203,4 +203,17 @@ def plot_reg(X_test, y_test, y_prediction):
     plt.xlabel("Independent variable (X)")
     plt.ylabel("Dependent variable (Y)")
 
+    plt.show()
+
+
+def plot_scatter(df, col_x: str, col_y: str, point_size=5):
+    # Create a scatter plot with specified point size
+    plt.scatter(df[col_x], df[col_y], s=point_size)
+
+    # Adding title and labels (optional)
+    plt.title('Scatter Plot of x vs y with Custom Point Size')
+    plt.xlabel('x')
+    plt.ylabel('y')
+
+    # Show the plot
     plt.show()

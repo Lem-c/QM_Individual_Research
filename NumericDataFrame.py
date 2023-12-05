@@ -111,12 +111,16 @@ class NDF(AllDataFrameInOne):
 
         fig, axes = plt.subplots(1, 2, figsize=(15, 5))
 
+        temp_data = self.reg_df_
+        temp_data = temp_data.replace(['.', '..', 'LSVT'], pd.NA)
+        temp_data = temp_data.dropna()
+
         # Distribution of 'Number of vaccinations delivered'
-        sns.boxplot(ax=axes[0], x=self.reg_df_[col_0])
+        sns.boxplot(ax=axes[0], x=temp_data[col_0])
         axes[0].set_title(title_0)
 
         # Distribution of 'newDailyNsoDeathsByDeathDate'
-        sns.boxplot(ax=axes[1], x=self.reg_df_[col_1])
+        sns.boxplot(ax=axes[1], x=temp_data[col_1])
         axes[1].set_title(title_1)
 
         plt.show()
