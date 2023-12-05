@@ -9,6 +9,9 @@ from sklearn.preprocessing import PolynomialFeatures
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error, r2_score
 
+# The dot size used for plotting
+dot_size = 1
+
 
 def format_read_csv(file_: str, sheet_id=1, header_id=0) -> pd.DataFrame:
     file_type = os.path.splitext(file_)[1]
@@ -175,7 +178,7 @@ def plot_trend(df_, col_year='YearMonth', col_data='newDailyNsoDeathsByDeathDate
     plt.ylabel('Y')
     plt.title(title)
     plt.xticks(rotation=45)  # Rotating x-axis labels for better readability
-    plt.legend()
+    # plt.legend()
     plt.show()
 
 
@@ -195,7 +198,7 @@ def plot_bar_chart(df_, borough: str, col_year='YearMonth'):
 
 def plot_reg(X_test, y_test, y_prediction):
     # Plot outputs with scatter and line
-    plt.scatter(X_test, y_test, s=10, label="Original Data", color="black")
+    plt.scatter(X_test, y_test, s=dot_size, label="Original Data", color="black")
     plt.plot(X_test, y_prediction, color="m")
     plt.xlabel("Independent variable (X)")
     plt.ylabel("Dependent variable (Y)")

@@ -85,11 +85,27 @@ class NDF(AllDataFrameInOne):
         return out_df
 
     def normalize_colum(self, tar_col: str, mod: str):
+        """
+        Normalization the data frame used for regression
+        :param tar_col: The target column contains the data
+        :param mod: <str, 'log'> | <str, 'sigmoid'>
+        """
+
         if mod is not None:
             self.reg_df_[tar_col] = util.sig_process_data(self.reg_df_[tar_col], mod)
 
     def plot_box_reg(self, col_0: str, col_1: str,
                      title_0: str, title_1: str):
+        """
+        Plot the box chart to visualize the data
+        !Note: The data frame is the merged dataset
+
+        :param col_0: The first box which column will be plotted
+        :param col_1: Second box
+        :param title_0: Title of first box plot
+        :param title_1: Title of second box plot
+        :return:
+        """
         from matplotlib import pyplot as plt
         import seaborn as sns
 

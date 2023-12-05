@@ -135,18 +135,18 @@ class AllDataFrameInOne:
 
         # Melting the dataframe to transform the years columns
         df_melted = self._left_independent_df_.melt(id_vars=current_columns,
-                                                    var_name="YearMonth",
+                                                    var_name="Year  ",
                                                     value_name=val_col_name)
         if pivot_tar in columns_str:
             current_columns.remove(pivot_tar)
-        current_columns.append("YearMonth")
+        current_columns.append("Year")
 
         # Pivoting the dataframe to make 'LookUp_BoroughName' as column headers
         df_pivoted = df_melted.pivot_table(index=current_columns,
                                            columns=pivot_tar,
                                            values=val_col_name).reset_index()
 
-        current_columns.remove("YearMonth")
+        current_columns.remove("Year")
         df_pivoted = util.sum_table_by_year(df_pivoted)
         df_final = df_pivoted.drop(columns=current_columns)
 
