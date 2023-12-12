@@ -9,6 +9,9 @@ from sklearn.preprocessing import PolynomialFeatures
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error, r2_score
 
+import statsmodels.api as sm
+from scipy import stats
+
 # The dot size used for plotting
 dot_size = 1
 
@@ -91,18 +94,58 @@ def simple_linear_regression(df_: pd.DataFrame, col_X: str, col_y: str,
         plot_reg(X_sorted, df_y, Y_sorted)
 
 
-def multi_linear_regression(df, crime_list: list, col_y: str):
+def multi_linear_regression(df, col_X: list, col_y: str):
     print("----Multi-Linear-Regression----")
     cleaned_data = df.dropna()
 
     # Defining the independent X and dependent y variables
-    X = cleaned_data[crime_list].to_numpy()
+    X = cleaned_data[col_X].to_numpy()
     y = cleaned_data[col_y].to_numpy()
 
     # Splitting the dataset into training and testing sets
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, train_size=0.7, random_state=42)
 
     linear_predict_model(X_train, X_test, y_train, y_test)
+
+
+def stats_linear_regression(df, col_X: str, col_y: str, isVarify=True):
+    print("----Stats-model-Regression----")
+    cleaned_data = df.dropna()
+
+    # Defining the independent X and dependent y variables
+    X = cleaned_data[col_X].to_numpy()
+    y = cleaned_data[col_y].to_numpy()
+    # Add a constant to the independent variable (for the intercept term)
+    X_with_constant = sm.add_constant(X)
+
+    # Fit a linear regression model
+    model = sm.OLS(y, X_with_constant).fit()
+    # Summary of the regression model
+    model_summary = model.summary()
+
+    print(model_summary)
+
+    if not isVarify:
+        return
+
+    # Extract the residuals
+    residuals = model.resid
+
+    # Normality test on the residuals (using the Jarque-Bera test)
+    jb_test = stats.jarque_bera(residuals)
+    # Homoscedasticity test (using the Breusch-Pagan test)
+    bp_test = sm.stats.diagnostic.het_breuschpagan(residuals, X_with_constant)
+    print(jb_test, "\n")
+    print(bp_test)
+
+    # Plotting residuals to visually inspect for homoscedasticity
+    plt.figure(figsize=(10, 6))
+    plt.scatter(X, residuals)
+    plt.axhline(y=0, color='r', linestyle='--')
+    plt.xlabel('Crime Rate')
+    plt.ylabel('Residuals')
+    plt.title('Residuals vs Crime Rate')
+    plt.show()
 
 
 def remove_outliers_iqr(df, col_1: str, col_2: str):

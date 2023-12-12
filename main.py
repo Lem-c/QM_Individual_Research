@@ -35,6 +35,9 @@ if __name__ == "__main__":
     crime_df.normalize_colum('cumPeopleVaccinatedFirstDoseByVaccinationDate', mod='log')
     crime_df.normalize_colum('cumDailyNsoDeathsByDeathDate', mod='log')
 
-    util.simple_linear_regression(crime_df.reg_df_,
-                                  'cumDailyNsoDeathsByDeathDate', 'cumPeopleVaccinatedFirstDoseByVaccinationDate',
-                                  isPolynomial=True, polynomialDegree=2)
+    # util.simple_linear_regression(crime_df.reg_df_,
+    #                               'cumDailyNsoDeathsByDeathDate', 'cumPeopleVaccinatedFirstDoseByVaccinationDate',
+    #                               isPolynomial=True, polynomialDegree=2)
+
+    util.stats_linear_regression(crime_df.reg_df_,
+                                 'cumDailyNsoDeathsByDeathDate', 'cumPeopleVaccinatedFirstDoseByVaccinationDate')
