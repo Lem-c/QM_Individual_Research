@@ -23,9 +23,9 @@ class AllDataFrameInOne:
         self._right_independent_df_ = util.format_read_csv(firstDataFile,
                                                            sheet_id=rightSheet,
                                                            header_id=rightHeader)
-        self._left_independent_df_ = util.format_read_csv(secondDataFile,
-                                                          sheet_id=leftSheet,
-                                                          header_id=leftHeader)
+        self.left_df = util.format_read_csv(secondDataFile,
+                                            sheet_id=leftSheet,
+                                            header_id=leftHeader)
 
         # The df used for data visualization
         self.borough_sum_df_ = None
@@ -38,7 +38,7 @@ class AllDataFrameInOne:
         :param tar_col: The column that going to be processed
         :param main_text: The column name for indexing
         """
-        return self._left_independent_df_[self._left_independent_df_[main_text] == tar_col]
+        return self.left_df[self.left_df[main_text] == tar_col]
 
     def join_minor_tables(self, crime_type: str, crime_year: int, rent_year: str,
                           left_merge_column='LookUp_BoroughName',
@@ -70,9 +70,9 @@ class AllDataFrameInOne:
 
     def _sum_table_by_groups(self, table_main_text='MajorText', data_column='LookUp_BoroughName'):
         # Grouping the data by 'MajorText' and summing up all the monthly crime counts
-        self._left_independent_df_ = self._left_independent_df_.groupby([table_main_text, data_column]).sum()
+        self.left_df = self.left_df.groupby([table_main_text, data_column]).sum()
         # Resetting the index to have 'MajorText' as a column
-        self._left_independent_df_.reset_index(inplace=True)
+        self.left_df.reset_index(inplace=True)
 
     def join_multi_row(self, selected_crime: list, crime_year: int, rent_year: str,
                        text_column='MinorText',
@@ -93,7 +93,7 @@ class AllDataFrameInOne:
         if text_column == 'MajorText':
             self._sum_table_by_groups(text_column, )
 
-        filtered_data = self._left_independent_df_[self._left_independent_df_[text_column].isin(selected_crime)]
+        filtered_data = self.left_df[self.left_df[text_column].isin(selected_crime)]
 
         if filtered_data is None:
             raise Exception("Fail to find target crime type")
@@ -134,9 +134,9 @@ class AllDataFrameInOne:
         current_columns = columns_str
 
         # Melting the dataframe to transform the years columns
-        df_melted = self._left_independent_df_.melt(id_vars=current_columns,
-                                                    var_name="Year  ",
-                                                    value_name=val_col_name)
+        df_melted = self.left_df.melt(id_vars=current_columns,
+                                      var_name="Year  ",
+                                      value_name=val_col_name)
         if pivot_tar in columns_str:
             current_columns.remove(pivot_tar)
         current_columns.append("Year")
@@ -156,5 +156,5 @@ class AllDataFrameInOne:
     def print_column_names(self):
         print(self._right_independent_df_.columns)
         print("____")
-        print(self._left_independent_df_.columns)
+        print(self.left_df.columns)
 
