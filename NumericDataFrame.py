@@ -21,9 +21,26 @@ class NDF(AllDataFrameInOne):
     def edit_reg_df(self, new_df):
         self.reg_df_ = new_df
 
-    def insert_df(self, df_url: str, head=0):
+    def insert_df(self, df_url: str, head=0, is_time_format=True, time_col="date"):
         new_df = util.format_read_csv(df_url, header_id=head)
+        new_df.dropna(axis=1)
+
+        if is_time_format:
+            # Filtering out non-datetime entries from the data
+            new_df[time_col] = new_df[time_col].astype(str)
+            new_df = new_df[new_df[time_col].str.match(r'\d{4}-\d{2}-\d{2}')]
+            new_df[time_col] = pd.to_datetime(new_df[time_col]).dt.date
+
         self.multi_df.append(new_df)
+
+    def merge_reg_df(self, df_, reg_col: str, tar_col: str, new_column_to_keep):
+        reg_copy = self.reg_df_
+
+        self.reg_df_ = pd.merge(self.reg_df_, df_,
+                                left_on=reg_col,
+                                right_on=tar_col, how='left')
+
+        self.reg_df_ = pd.concat([reg_copy, self.reg_df_[new_column_to_keep]], axis=1)
 
     def simple_join(self, left_index: int, right_index: int,
                     left_col: str, right_col: str,
@@ -157,6 +174,10 @@ class NDF(AllDataFrameInOne):
                        right_col_date: str, right_col_value: str, right_title: str):
         util.plot_trend(self.reg_df_, left_col_date, left_col_value, left_title)
         util.plot_trend(self.reg_df_, right_col_date, right_col_value, right_title)
+
+    def sum_multi_data(self):
+        for _ in self.multi_df:
+            print(_.describe())
 
     def print_column_names(self):
         for df in self.multi_df:

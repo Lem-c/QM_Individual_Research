@@ -6,10 +6,13 @@ import numpy as np
 
 from sklearn import linear_model
 from sklearn.preprocessing import PolynomialFeatures
-from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.svm import SVR
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
 
 import statsmodels.api as sm
+from statsmodels.graphics.regressionplots import plot_partregress_grid
 from scipy import stats
 
 # The dot size used for plotting
@@ -94,6 +97,36 @@ def simple_linear_regression(df_: pd.DataFrame, col_X: str, col_y: str,
         plot_reg(X_sorted, df_y, Y_sorted)
 
 
+def support_vector_regression(df, col_X: str, col_y: str):
+    cleaned_data = df.dropna()
+
+    # Defining the independent X and dependent y variables
+    X = cleaned_data[[col_X]]
+    y = cleaned_data[col_y]
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, train_size=0.8, random_state=2024)
+
+    scaler = StandardScaler()
+    X_train_scaled = scaler.fit_transform(X_train)
+    X_test_scaled = scaler.transform(X_test)
+
+    from sklearn.decomposition import PCA
+    pca = PCA(n_components=0.95)  # 'mle' automatically selects the number of components
+    X_train_pca = pca.fit_transform(X_train_scaled)
+    X_test_pca = pca.transform(X_test_scaled)
+
+    model = SVR(kernel='rbf')
+    model.fit(X_train_pca, y_train)
+    y_prediction = model.predict(X_test_pca)
+
+    # Evaluate the model
+    mse = mean_squared_error(y_test, y_prediction)
+    rmse = np.sqrt(mse)
+    print(f"Root Mean Squared Error: {rmse}")
+
+    plot_reg(X_test, y_test, y_prediction)
+
+
 def multi_linear_regression(df, col_X: list, col_y: str):
     print("----Multi-Linear-Regression----")
     cleaned_data = df.dropna()
@@ -108,7 +141,9 @@ def multi_linear_regression(df, col_X: list, col_y: str):
     linear_predict_model(X_train, X_test, y_train, y_test)
 
 
-def stats_linear_regression(df, col_X: str, col_y: str, isVarify=True):
+def stats_linear_regression(df, col_X: str, col_y: str,
+                            x_axis: str, y_axis: str, title: str,
+                            isVarify=True):
     print("----Stats-model-Regression----")
     cleaned_data = df.dropna()
 
@@ -140,11 +175,32 @@ def stats_linear_regression(df, col_X: str, col_y: str, isVarify=True):
 
     # Plotting residuals to visually inspect for homoscedasticity
     plt.figure(figsize=(10, 6))
-    plt.scatter(X, residuals)
+    plt.scatter(model.fittedvalues, residuals)
     plt.axhline(y=0, color='r', linestyle='--')
-    plt.xlabel('Crime Rate')
-    plt.ylabel('Residuals')
-    plt.title('Residuals vs Crime Rate')
+    plt.xlabel(x_axis)
+    plt.ylabel(y_axis)
+    plt.title(title)
+    plt.show()
+
+
+def stats_mutil_linear_regression(df, indi_param_list: list, col_y: str):
+
+    print("----Multi-Linear-Regression----")
+    cleaned_data = df.dropna()
+
+    # Defining the independent X and dependent y variables
+    X = cleaned_data[indi_param_list]
+    y = cleaned_data[col_y]
+
+    # Assuming `X` is a DataFrame with multiple columns and `y` is the target series
+
+    model = sm.OLS(y, sm.add_constant(X)).fit()
+    print(model.summary())
+
+    # Specify the number of columns in the grid
+    fig = plt.figure(figsize=(8, 6))
+    plot_partregress_grid(model, fig=fig)
+    plt.tight_layout()
     plt.show()
 
 
@@ -205,7 +261,8 @@ def sig_process_data(df_, mod='sigmoid'):
     return normalized_data
 
 
-def plot_trend(df_, col_year='YearMonth', col_data='newDailyNsoDeathsByDeathDate', title='Chart Title'):
+def plot_trend(df_, col_year='YearMonth', col_data='newDailyNsoDeathsByDeathDate',
+               title='Chart Title', is_bar=False):
     if df_ is None:
         raise Exception("Null object find: 'df_'")
 
@@ -214,7 +271,10 @@ def plot_trend(df_, col_year='YearMonth', col_data='newDailyNsoDeathsByDeathDate
 
     # Plotting line graphs for each borough
     plt.figure(figsize=(15, 6))
-    plt.plot(x, df_[col_data])
+    if is_bar:
+        plt.bar(x, df_[col_data], align="center", color="steelblue", alpha=0.6)
+    else:
+        plt.plot(x, df_[col_data])
 
     # Adding labels and title
     plt.xlabel(col_year)
@@ -222,6 +282,25 @@ def plot_trend(df_, col_year='YearMonth', col_data='newDailyNsoDeathsByDeathDate
     plt.title(title)
     plt.xticks(rotation=45)  # Rotating x-axis labels for better readability
     # plt.legend()
+    plt.show()
+
+
+def plot_correlation_matrix(df, title='Correlation Matrix'):
+    plt.rcParams["axes.grid"] = False
+    f = plt.figure(figsize=(19, 15))
+
+    plt.matshow(df.corr(), fignum=f.number)
+
+    self_define = ["death", "vaccination", "hospitalCases", "positiveTest"]
+
+    plt.xticks(range(df.shape[1]), self_define, fontsize=14, rotation=90)
+    plt.yticks(range(df.shape[1]), self_define, fontsize=14)
+
+    cb = plt.colorbar()
+
+    cb.ax.tick_params(labelsize=14)
+    plt.title(title, fontsize=16)
+
     plt.show()
 
 
@@ -246,6 +325,18 @@ def plot_reg(X_test, y_test, y_prediction):
     plt.xlabel("Independent variable (X)")
     plt.ylabel("Dependent variable (Y)")
 
+    plt.show()
+
+
+def plot_hist(df, x: str,
+              title: str, x_axis: str):
+    # Histogram view
+    plt.figure(figsize=(12, 8))
+    plt.hist(df[x], bins=30, color="#FF4500", alpha=0.7)
+    plt.title(title)
+    plt.xlabel(x_axis)
+    plt.ylabel("Frequency")
+    plt.grid(True)
     plt.show()
 
 
