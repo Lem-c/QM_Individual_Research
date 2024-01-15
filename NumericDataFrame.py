@@ -134,35 +134,34 @@ class NDF(AllDataFrameInOne):
         if mod is not None:
             self.reg_df_[tar_col] = util.sig_process_data(self.reg_df_[tar_col], mod)
 
-    def plot_box_reg(self, col_0: str, col_1: str,
-                     title_0: str, title_1: str):
+    def plot_box_reg(self):
         """
         Plot the box chart to visualize the data
         !Note: The data frame is the merged dataset
 
-        :param col_0: The first box which column will be plotted
-        :param col_1: Second box
-        :param title_0: Title of first box plot
-        :param title_1: Title of second box plot
+        :param title_0: Title of box plot
         :return:
         """
         from matplotlib import pyplot as plt
-        import seaborn as sns
 
-        fig, axes = plt.subplots(1, 2, figsize=(15, 5))
+        # Number of rows and columns for subplots
+        n_cols = 2  # You can change this as per your requirement
+        n_rows = (len(self.reg_df_.columns) + 1) // n_cols
 
-        temp_data = self.reg_df_
-        temp_data = temp_data.replace(['.', '..', 'LSVT'], pd.NA)
-        temp_data = temp_data.dropna()
+        # Create subplots
+        fig, axes = plt.subplots(n_rows, n_cols, figsize=(15, 5 * n_rows))
+        axes = axes.flatten()  # Flatten the axes array for easy indexing
 
-        # Distribution of 'Number of vaccinations delivered'
-        sns.boxplot(ax=axes[0], x=temp_data[col_0])
-        axes[0].set_title(title_0)
+        # Plotting box plots for each column
+        for i, col in enumerate(self.reg_df_.columns):
+            if self.reg_df_[col].dtype in ['float64', 'int64']:
+                self.reg_df_.boxplot(column=[col], ax=axes[i])
+                axes[i].set_title(col)
+            else:
+                axes[i].set_visible(False)
 
-        # Distribution of 'newDailyNsoDeathsByDeathDate'
-        sns.boxplot(ax=axes[1], x=temp_data[col_1])
-        axes[1].set_title(title_1)
-
+        # Adjust layout and show plot
+        plt.tight_layout()
         plt.show()
 
     def org_data_insight(self, left_col_date: str, left_col_value: str, left_title: str,

@@ -1,4 +1,5 @@
 # This is assist methods file
+import math
 import os
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -10,6 +11,7 @@ from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.svm import SVR
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
+from statsmodels.genmod.families import NegativeBinomial
 
 import statsmodels.api as sm
 from statsmodels.graphics.regressionplots import plot_partregress_grid
@@ -63,7 +65,9 @@ def simple_linear_regression(df_: pd.DataFrame, col_X: str, col_y: str,
     df_[col_y] = pd.to_numeric(df_[col_y], errors='coerce')
 
     df_ = df_.dropna(subset=[col_X, col_y])
-    df_ = remove_outliers_iqr(df_, col_X, col_y)
+    for col in df_.columns:
+        if df_[col].dtype in ['float64', 'int64']:  # Apply only to numeric columns
+            df_ = remove_outliers(df_, col)
 
     df_X = df_[[col_X]].to_numpy()
     df_y = df_[col_y].to_numpy()
@@ -183,7 +187,7 @@ def stats_linear_regression(df, col_X: str, col_y: str,
     plt.show()
 
 
-def stats_mutil_linear_regression(df, indi_param_list: list, col_y: str):
+def stats_mutil_linear_regression(df, indi_param_list: list, col_y: str, isVarify=True):
 
     print("----Multi-Linear-Regression----")
     cleaned_data = df.dropna()
@@ -203,19 +207,83 @@ def stats_mutil_linear_regression(df, indi_param_list: list, col_y: str):
     plt.tight_layout()
     plt.show()
 
+    if not isVarify:
+        return
 
-def remove_outliers_iqr(df, col_1: str, col_2: str):
+    # Extract the residuals
+    residuals = model.resid
+
+    # Plotting residuals to visually inspect for homoscedasticity
+    plt.figure(figsize=(10, 6))
+    plt.scatter(model.fittedvalues, residuals)
+    plt.axhline(y=0, color='r', linestyle='--')
+    plt.xlabel("Fitted model value")
+    plt.ylabel("Residual")
+    plt.title("Residual vs. Fitted Plot")
+    plt.show()
+
+
+def get_bins_by_value(val_: float, min_: float, max_: float, level: int):
+    dif_min_max = int(max_ - min_)
+    if dif_min_max < 0:
+        exit(-1)
+    step = dif_min_max / level
+
+    for i in range(level):
+        prev = min_ + step * i
+        lstv = min_ + step * (i+1)
+
+        if lstv >= max_:
+            return level
+
+        if prev <= val_ <= lstv:
+            return i
+        else:
+            continue
+
+    return -1
+
+
+def auto_encoding_df(df, col: str, interval: int):
+    df_min = np.min(df[col])
+    df_max = np.max(df[col])
+
+    result_col = []
+
+    for val_ in df[col]:
+        result_col.append(get_bins_by_value(val_, df_min, df_max, interval))
+
+    df.loc[:, col] = result_col
+
+
+def stats_neg_binom_reg(df, indi_param_list: list, col_y: str):
+    print("----neg_binom-Regression----")
+    cleaned_data = df.dropna()
+
+    # Defining the independent X and dependent y variables
+    X = cleaned_data[indi_param_list]
+    X = sm.add_constant(X)
+    y = cleaned_data[col_y]
+
+    neg_binom_model = sm.GLM(y, X, family=NegativeBinomial())
+
+    # Fit the model
+    neg_binom_results = neg_binom_model.fit()
+
+    # Print the results
+    print(neg_binom_results.summary())
+
+
+def remove_outliers(df, column):
     """
     Remove outliers using Inter-quartile Range (IQR)
     """
-    Q1 = df[[col_1, col_2]].quantile(0.25)
-    Q3 = df[[col_1, col_2]].quantile(0.75)
+    Q1 = df[column].quantile(0.25)
+    Q3 = df[column].quantile(0.75)
     IQR = Q3 - Q1
-
-    outlier_condition = ((df[[col_1, col_2]] < (Q1 - 1.5 * IQR)) |
-                         (df[[col_1, col_2]] > (
-                                     Q3 + 1.5 * IQR))).any(axis=1)
-    return df[~outlier_condition]
+    lower_bound = Q1 - 1.5 * IQR
+    upper_bound = Q3 + 1.5 * IQR
+    return df[(df[column] >= lower_bound) & (df[column] <= upper_bound)]
 
 
 def sum_table_by_year(df_, col_year="YearMonth"):
@@ -291,7 +359,7 @@ def plot_correlation_matrix(df, title='Correlation Matrix'):
 
     plt.matshow(df.corr(), fignum=f.number)
 
-    self_define = ["death", "vaccination", "hospitalCases", "positiveTest"]
+    self_define = ["death", "vaccination_2", "hospitalCases", "positiveTest"]
 
     plt.xticks(range(df.shape[1]), self_define, fontsize=14, rotation=90)
     plt.yticks(range(df.shape[1]), self_define, fontsize=14)
