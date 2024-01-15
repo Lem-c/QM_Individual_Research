@@ -2,9 +2,9 @@
 @ Author    : Lem Chen
 @ Time      : 23/11/2023
 """
+import pandas as pd
 
 import NumericDataFrame as myDF
-import pandas as pd
 import util
 
 # data from: https://coronavirus.data.gov.uk/details/download
@@ -44,10 +44,10 @@ if __name__ == "__main__":
     #                   'cumDailyNsoDeathsByDeathDate', 'cumPeopleVaccinatedSecondDoseByVaccinationDate',
     #                   point_size=2)
     #
-    # # # Data normalization
-    # # # log is better than sigmoid
-    # # vac_dose_data_obj.normalize_colum('cumPeopleVaccinatedSecondDoseByVaccinationDate', mod='log')
-    # # vac_dose_data_obj.normalize_colum('cumDailyNsoDeathsByDeathDate', mod='log')
+    # # Data normalization
+    # # log is better than sigmoid
+    # vac_dose_data_obj.normalize_colum('cumPeopleVaccinatedSecondDoseByVaccinationDate', mod='log')
+    # vac_dose_data_obj.normalize_colum('cumDailyNsoDeathsByDeathDate', mod='log')
     #
     # for col in vac_dose_data_obj.reg_df_.columns:
     #     if vac_dose_data_obj.reg_df_[col].dtype in ['float64', 'int64']:  # Apply only to numeric columns
@@ -70,10 +70,7 @@ if __name__ == "__main__":
     vac_dose_data_obj.merge_reg_df(vac_dose_data_obj.multi_df[4], "date", "date",
                                    "uniquePeopleTestedBySpecimenDateRollingSum")
 
-    # vac_dose_data_obj.normalize_colum('hospitalCases', mod='log')
-    # vac_dose_data_obj.normalize_colum('uniquePeopleTestedBySpecimenDateRollingSum', mod='log')
-
-    from statsmodels.stats.outliers_influence import variance_inflation_factor
+    # from statsmodels.stats.outliers_influence import variance_inflation_factor
     # Assuming 'dose_taken_num' is the dependent variable, we drop it for VIF calculation
     joint_data = vac_dose_data_obj.reg_df_[["cumDailyNsoDeathsByDeathDate",
                                             "cumPeopleVaccinatedSecondDoseByVaccinationDate",
@@ -82,7 +79,7 @@ if __name__ == "__main__":
     joint_data.dropna(axis=1)
 
     # X = joint_data.drop('cumPeopleVaccinatedSecondDoseByVaccinationDate', axis=1)
-    # Calculating VIF for each independent variable
+    # # Calculating VIF for each independent variable
     # vif_data = pd.DataFrame()
     # vif_data['feature'] = X.columns
     # vif_data['VIF'] = [variance_inflation_factor(X.values, i) for i in range(X.shape[1])]
@@ -103,6 +100,6 @@ if __name__ == "__main__":
     ],
                                        "cumPeopleVaccinatedSecondDoseByVaccinationDate")
 
-    # util.plot_correlation_matrix(joint_data)
+    util.plot_correlation_matrix(joint_data)
 
-    # print(joint_data.describe())
+    print(joint_data.describe())
